@@ -1585,41 +1585,41 @@ class GPUModelRunner(LoRAModelRunnerMixin):
                 " and profiled with %s %s items of the maximum feature size.",
                 encoder_budget, max_num_mm_items, dummy_data_modality)
 
-            # Create dummy batch of multimodal inputs.
-            dummy_mm_kwargs = self.mm_registry.get_decoder_dummy_data(
-                model_config=self.model_config,
-                seq_len=self.max_num_tokens,
-                mm_counts={
-                    dummy_data_modality: 1
-                },
-            ).multi_modal_data
+        #     # Create dummy batch of multimodal inputs.
+        #     dummy_mm_kwargs = self.mm_registry.get_decoder_dummy_data(
+        #         model_config=self.model_config,
+        #         seq_len=self.max_num_tokens,
+        #         mm_counts={
+        #             dummy_data_modality: 1
+        #         },
+        #     ).multi_modal_data
 
-            batched_dummy_mm_inputs = MultiModalKwargs.batch(
-                [dummy_mm_kwargs] * max_num_mm_items)
-            batched_dummy_mm_inputs = MultiModalKwargs.as_kwargs(
-                batched_dummy_mm_inputs, device=self.device)
+        #     batched_dummy_mm_inputs = MultiModalKwargs.batch(
+        #         [dummy_mm_kwargs] * max_num_mm_items)
+        #     batched_dummy_mm_inputs = MultiModalKwargs.as_kwargs(
+        #         batched_dummy_mm_inputs, device=self.device)
 
-            # Run multimodal encoder.
-            dummy_encoder_outputs = self.model.get_multimodal_embeddings(
-                **batched_dummy_mm_inputs)
+        #     # Run multimodal encoder.
+        #     dummy_encoder_outputs = self.model.get_multimodal_embeddings(
+        #         **batched_dummy_mm_inputs)
 
-            sanity_check_mm_encoder_outputs(
-                dummy_encoder_outputs,
-                expected_num_items=max_num_mm_items,
-            )
+        #     sanity_check_mm_encoder_outputs(
+        #         dummy_encoder_outputs,
+        #         expected_num_items=max_num_mm_items,
+        #     )
 
-            # Cache the dummy encoder outputs.
-            self.encoder_cache["tmp"] = dict(enumerate(dummy_encoder_outputs))
+        #     # Cache the dummy encoder outputs.
+        #     self.encoder_cache["tmp"] = dict(enumerate(dummy_encoder_outputs))
 
-        hidden_states = self._dummy_run(self.max_num_tokens)
-        if get_pp_group().is_last_rank:
-            sampler_output = self._dummy_sampler_run(hidden_states)
-        else:
-            sampler_output = None
-        torch.cuda.synchronize()
-        del hidden_states, sampler_output
-        self.encoder_cache.clear()
-        gc.collect()
+        # hidden_states = self._dummy_run(self.max_num_tokens)
+        # if get_pp_group().is_last_rank:
+        #     sampler_output = self._dummy_sampler_run(hidden_states)
+        # else:
+        #     sampler_output = None
+        # torch.cuda.synchronize()
+        # del hidden_states, sampler_output
+        # self.encoder_cache.clear()
+        # gc.collect()
 
     def capture_model(self) -> None:
         if not self.use_cuda_graph:
